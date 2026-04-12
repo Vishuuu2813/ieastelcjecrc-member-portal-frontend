@@ -81,6 +81,7 @@ export default function Applications() {
             (member.registrationNumber || '').toLowerCase().includes(term) ||
             (member.email || '').toLowerCase().includes(term) ||
             (offer.position || '').toLowerCase().includes(term) ||
+            (offer.offerNumber || '').toLowerCase().includes(term) ||
             (offer.company || '').toLowerCase().includes(term) ||
             (offer.country || '').toLowerCase().includes(term);
 
@@ -202,10 +203,10 @@ export default function Applications() {
                                             </td>
                                             <td className="px-5 py-4">
                                                 <p className="text-sm font-semibold text-gray-800">{offer.position || '-'}</p>
-                                                <p className="text-xs text-gray-500">{offer.company || ''}</p>
+                                                <p className="text-xs text-gray-500">{offer.offerNumber ? `${offer.offerNumber} • ` : ''}{offer.company || ''}</p>
                                             </td>
                                             <td className="px-5 py-4">
-                                                <span className="text-sm text-gray-700">{offer.flag && `${offer.flag} `}{offer.country || '-'}</span>
+                                                <span className="text-sm text-gray-700">{offer.country || '-'}</span>
                                             </td>
                                             <td className="px-5 py-4 text-sm text-gray-500">{date}</td>
                                             <td className="px-5 py-4">
@@ -249,6 +250,16 @@ export default function Applications() {
     );
 }
 
+const InfoRow = ({ icon, label, value }) => (
+    <div className="flex items-start gap-3 py-2">
+        <span className="text-gray-400 mt-0.5">{icon}</span>
+        <div>
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">{label}</p>
+            <p className="text-sm font-medium text-gray-800">{value || '-'}</p>
+        </div>
+    </div>
+);
+
 function ApplicationDetailModal({ app, onClose, onStatusChange, updating }) {
     const member = app.membershipApplicationId || app.userId || {};
     const user = app.userId || {};
@@ -260,15 +271,7 @@ function ApplicationDetailModal({ app, onClose, onStatusChange, updating }) {
         ? new Date(app.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
         : '';
 
-    const InfoRow = ({ icon, label, value }) => (
-        <div className="flex items-start gap-3 py-2">
-            <span className="text-gray-400 mt-0.5">{icon}</span>
-            <div>
-                <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">{label}</p>
-                <p className="text-sm font-medium text-gray-800">{value || '-'}</p>
-            </div>
-        </div>
-    );
+
 
     return (
         <motion.div
@@ -296,7 +299,7 @@ function ApplicationDetailModal({ app, onClose, onStatusChange, updating }) {
                     </button>
                     <h2 className="text-xl font-bold">Application Details</h2>
                     <p className="text-blue-200 text-sm mt-1">
-                        {member.fullName || user.fullName || 'Member'} &mdash; {offer.position || 'Offer'}
+                        {member.fullName || user.fullName || 'Member'} &mdash; {offer.offerNumber || offer.position || 'Offer'}
                     </p>
                 </div>
 
@@ -328,10 +331,11 @@ function ApplicationDetailModal({ app, onClose, onStatusChange, updating }) {
                             Offer Information
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1">
+                            <InfoRow icon={<BadgeIcon style={{ fontSize: 16 }} />} label="Offer Number" value={offer.offerNumber} />
                             <InfoRow icon={<WorkIcon style={{ fontSize: 16 }} />} label="Position" value={offer.position} />
-                            <InfoRow icon={<WorkIcon style={{ fontSize: 16 }} />} label="Company" value={offer.company} />
-                            <InfoRow icon={<LocationIcon style={{ fontSize: 16 }} />} label="Country" value={offer.flag ? `${offer.flag} ${offer.country}` : offer.country} />
-                            <InfoRow icon={<TimeIcon style={{ fontSize: 16 }} />} label="Duration" value={offer.duration} />
+                            <InfoRow icon={<WorkIcon style={{ fontSize: 16 }} />} label="Employer" value={offer.company} />
+                            <InfoRow icon={<LocationIcon style={{ fontSize: 16 }} />} label="Country" value={offer.country} />
+                            <InfoRow icon={<TimeIcon style={{ fontSize: 16 }} />} label="Period" value={offer.duration} />
                             <InfoRow icon={<StipendIcon style={{ fontSize: 16 }} />} label="Stipend" value={offer.stipend} />
                             <InfoRow icon={<SchoolIcon style={{ fontSize: 16 }} />} label="Field" value={offer.field} />
                             <InfoRow icon={<CalendarIcon style={{ fontSize: 16 }} />} label="Deadline" value={offer.deadline} />

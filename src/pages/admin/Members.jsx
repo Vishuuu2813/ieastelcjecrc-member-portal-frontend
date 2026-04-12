@@ -151,7 +151,7 @@ function MemberDetailModal({ data, onClose, onApplicationUpdated }) {
                                 <thead>
                                     <tr className="border-b border-gray-200">
                                         <th className="py-2 text-xs font-bold text-gray-500 uppercase">Offer</th>
-                                        <th className="py-2 text-xs font-bold text-gray-500 uppercase">Company</th>
+                                        <th className="py-2 text-xs font-bold text-gray-500 uppercase">Employer</th>
                                         <th className="py-2 text-xs font-bold text-gray-500 uppercase">Status</th>
                                         <th className="py-2 text-xs font-bold text-gray-500 uppercase">Rejection Reason</th>
                                         <th className="py-2 text-xs font-bold text-gray-500 uppercase">Update</th>
@@ -161,7 +161,7 @@ function MemberDetailModal({ data, onClose, onApplicationUpdated }) {
                                     {(applications || []).map((app) => (
                                         <tr key={app._id} className="hover:bg-gray-50">
                                             <td className="py-3 text-sm font-medium">{app.offer?.position || '-'}</td>
-                                            <td className="py-3 text-sm">{app.offer?.company || '-'}</td>
+                                            <td className="py-3 text-sm">{app.offer?.offerNumber ? `${app.offer.offerNumber} • ` : ''}{app.offer?.company || '-'}</td>
                                             <td className="py-3">
                                                 {updatingId === app._id ? (
                                                     <span className="text-xs text-gray-500">Updating...</span>

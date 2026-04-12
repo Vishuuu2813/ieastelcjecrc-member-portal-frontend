@@ -27,13 +27,10 @@ import {
     ChevronRight as ChevronRightIcon,
     Menu as MenuIcon,
     KeyboardArrowDown as ArrowDownIcon,
-<<<<<<< Updated upstream
     PictureAsPdf as PdfIcon,
     Info as InfoIcon,
-    Article as ArticleIcon
-=======
+    Article as ArticleIcon,
     CalendarMonth as CalendarIcon
->>>>>>> Stashed changes
 } from '@mui/icons-material';
 import {
     Chart as ChartJS,
@@ -74,11 +71,10 @@ const mapFieldToCategory = (field) => {
 
 // Mock Data
 const OFFERS = [
-    { id: 1, country: 'Germany', flag: '🇩🇪', company: 'BMW Group', position: 'Software Engineering Intern', duration: '6 Months', stipend: '€1200/mo', field: 'Computer Science', deadline: '2026-03-01', urgent: true },
-    { id: 2, country: 'Switzerland', flag: '🇨🇭', company: 'CERN', position: 'Research Assistant', duration: '12 Months', stipend: 'CHF 3500/mo', field: 'Physics / IT', deadline: '2026-03-15', urgent: false },
-    { id: 3, country: 'Japan', flag: '🇯🇵', company: 'Toyota', position: 'R&D Intern', duration: '3 Months', stipend: '¥150,000/mo', field: 'Mechanical Eng.', deadline: '2026-02-28', urgent: true },
-    { id: 4, country: 'Sweden', flag: '🇸🇪', company: 'Spotify', position: 'Data Science Intern', duration: '6 Months', stipend: 'SEK 25,000/mo', field: 'Data Science', deadline: '2026-04-10', urgent: false },
-    { id: 5, country: 'USA', flag: '🇺🇸', company: 'Goldman Sachs', position: 'Financial Analyst Intern', duration: '3 Months', stipend: '$2500/mo', field: 'Economics / Finance', deadline: '2026-05-01', urgent: false },
+    { id: 1, country: 'Germany', company: 'BMW Group', position: 'Software Engineering Intern', duration: '6 Months', stipend: '€1200/mo', field: 'Computer Science', deadline: '2026-03-01', urgent: true },
+    { id: 2, country: 'Switzerland', company: 'CERN', position: 'Research Assistant', duration: '12 Months', stipend: 'CHF 3500/mo', field: 'Physics / IT', deadline: '2026-03-15', urgent: false },
+    { id: 3, country: 'Japan', company: 'Toyota', position: 'R&D Intern', duration: '3 Months', stipend: '¥150,000/mo', field: 'Mechanical Eng.', deadline: '2026-02-28', urgent: true },
+    { id: 4, country: 'Sweden', company: 'Spotify', position: 'Data Science Intern', duration: '6 Months', stipend: 'SEK 25,000/mo', field: 'Data Science', deadline: '2026-04-10', urgent: false },
 ];
 
 export default function MemberDashboard() {
@@ -665,106 +661,48 @@ export default function MemberDashboard() {
         );
     };
 
-    const OffersView = () => {
-        const currentOffers = Array.isArray(offers) ? offers : [];
-        const filteredOffers = currentOffers.filter(o => {
-            // Category Filter
-            if (filterField !== 'all' && mapFieldToCategory(o.field) !== filterField) return false;
-            
-            // Search Filter (ID, Country, Company, Position)
-            if (offerSearch) {
-                const q = offerSearch.toLowerCase();
-                const offerId = (o._id || o.id || '').toString().toLowerCase();
-                const country = (o.country || '').toLowerCase();
-                const company = (o.company || '').toLowerCase();
-                const position = (o.position || '').toLowerCase();
-                
-                return country.includes(q) || company.includes(q) || position.includes(q) || offerId.includes(q);
-            }
-            
-            return true;
-        });
-
-        return (
-            <div className="space-y-6">
-                <div>
-                    <h2 className="text-2xl font-bold text-[#003366] mb-1">Global Internships</h2>
-                    <p className="text-sm text-gray-500 mb-6">Explore and apply for international opportunities</p>
-                    
-                    <div className="space-y-4">
-                        {/* Search Bar - Full Width Top */}
-                        <div className="relative">
-                            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" style={{ fontSize: 22 }} />
-                            <input
-                                type="text"
-                                placeholder="Search by country, company, position or offer ID..."
-                                value={offerSearch}
-                                onChange={(e) => setOfferSearch(e.target.value)}
-                                className="w-full pl-12 pr-4 py-4 rounded-2xl border-0 ring-1 ring-gray-200 focus:ring-2 focus:ring-[#003366] shadow-sm text-base transition-all"
-                            />
-                        </div>
-                        
-                        {/* Filter Section - Below Search */}
-                        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                                <div className="flex items-center gap-2 min-w-max">
-                                    <FieldIcon className="text-[#003366]" />
-                                    <span className="text-sm font-bold text-gray-700">Filter by Category:</span>
+    const OffersView = () => (
+        <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {offers.map(offer => {
+                    const offerId = offer._id || offer.id;
+                    const isSaved = savedOfferIds.includes(offerId);
+                    const isApplied = applications.some(app => (app.offerId?.toString?.() || app.offerId) === offerId || app.offer?._id === offerId);
+                    return (
+                        <motion.div
+                            key={offerId}
+                            whileHover={{ y: -5, boxShadow: '0 10px 30px -10px rgba(0,0,0,0.1)' }}
+                            className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm relative group cursor-pointer flex flex-col h-full"
+                            onClick={() => setSelectedOffer(offer)}
+                        >
+                            {/* Status Tags Container */}
+                            <div className="flex flex-wrap gap-2 mb-4 items-center justify-between">
+                                <div className="flex gap-2">
+                                    {isApplied && (
+                                        <span className="bg-green-100 text-green-700 text-[10px] font-bold px-3 py-1 rounded-full">
+                                            APPLIED
+                                        </span>
+                                    )}
                                 </div>
-                                <div className="flex flex-wrap gap-2">
-                                    {OFFER_CATEGORIES.map(f => (
-                                        <button
-                                            key={f}
-                                            onClick={() => setFilterField(f)}
-                                            className={`px-5 py-2 rounded-xl text-xs font-bold transition-all border ${
-                                                filterField === f
-                                                    ? 'bg-[#003366] text-white border-[#003366] shadow-md transform scale-105'
-                                                    : 'bg-white text-gray-600 border-gray-100 hover:border-[#003366] hover:text-[#003366] hover:bg-blue-50/50'
-                                            }`}
-                                        >
-                                            {f.toUpperCase()}
-                                        </button>
-                                    ))}
+                                {offer.urgent && (
+                                    <span className="bg-[#D62828]/10 text-[#D62828] text-[10px] font-bold px-3 py-1 rounded-full">
+                                        DEADLINE APPROACHING
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex items-center mb-4">
+                                <span className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-[#003366] text-2xl mr-4 shadow-sm border border-blue-100/50">
+                                    <OffersIcon fontSize="inherit" />
+                                </span>
+                                <div>
+                                    <h3 className="font-bold text-lg text-gray-800 group-hover:text-[#003366] transition-colors">{offer.offerNumber || offer.company}</h3>
+                                    <p className="text-sm text-gray-500">{offer.country}</p>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredOffers.map(offer => {
-                        const offerId = offer._id || offer.id;
-                        const isSaved = savedOfferIds.includes(offerId);
-                        const isApplied = applications.some(app => (app.offerId?.toString?.() || app.offerId) === offerId || app.offer?._id === offerId);
-                        
-                        // Calculate Deadline Nearby
-                        let isDeadlineNearby = !!offer.deadlineNearby;
-                        if (!isDeadlineNearby && offer.deadline) {
-                            const deadlineDate = new Date(offer.deadline);
-                            const today = new Date();
-                            const diffTime = deadlineDate - today;
-                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                            if (diffDays >= 0 && diffDays <= 3) isDeadlineNearby = true;
-                        }
-
-                        return (
-                            <motion.div
-                                key={offerId}
-                                whileHover={{ y: -5, boxShadow: '0 10px 30px -10px rgba(0,0,0,0.1)' }}
-                                className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm relative group cursor-pointer"
-                                onClick={() => setSelectedOffer(offer)}
-                            >
-                                <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
-                                    {offer.urgent && (
-                                        <span className="bg-[#D62828]/10 text-[#D62828] text-[10px] font-bold px-2 py-1 rounded-full">
-                                            URGENT
-                                        </span>
-                                    )}
-                                    {isDeadlineNearby && (
-                                        <span className="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-1 rounded-full border border-orange-200">
-                                            DEADLINE NEARBY
-                                        </span>
-                                    )}
+                            <div className="space-y-3 mb-6 flex-1">
+                                <h4 className="font-semibold text-gray-700 min-h-[48px] leading-snug line-clamp-2">{offer.position}</h4>
+                                <div className="flex items-center text-sm text-gray-600">
+                                    <TimeIcon className="w-4 h-4 mr-2 text-gray-400" /> {offer.duration}
                                 </div>
                                 {isApplied && (
                                     <span className="absolute top-4 left-4 bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full">
@@ -862,48 +800,43 @@ export default function MemberDashboard() {
                             <motion.div
                                 key={offerId}
                                 whileHover={{ y: -5, boxShadow: '0 10px 30px -10px rgba(0,0,0,0.1)' }}
-                                className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm relative group cursor-pointer"
+                                className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm relative group cursor-pointer flex flex-col h-full"
                                 onClick={() => setSelectedOffer(offer)}
                             >
-                                <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
+                                {/* Status Tags Container */}
+                                <div className="flex flex-wrap gap-2 mb-4 items-center justify-between">
+                                    <div className="flex gap-2">
+                                        {isApplied && (
+                                            <span className="bg-green-100 text-green-700 text-[10px] font-bold px-3 py-1 rounded-full">
+                                                APPLIED
+                                            </span>
+                                        )}
+                                    </div>
                                     {offer.urgent && (
-                                        <span className="bg-[#D62828]/10 text-[#D62828] text-[10px] font-bold px-2 py-1 rounded-full">
-                                            URGENT
-                                        </span>
-                                    )}
-                                    {isDeadlineNearby && (
-                                        <span className="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-1 rounded-full border border-orange-200">
-                                            DEADLINE NEARBY
+                                        <span className="bg-[#D62828]/10 text-[#D62828] text-[10px] font-bold px-3 py-1 rounded-full">
+                                            DEADLINE APPROACHING
                                         </span>
                                     )}
                                 </div>
-                                {isApplied && (
-                                    <span className="absolute top-4 left-4 bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full">
-                                        APPLIED
+                                <div className="flex items-center mb-4">
+                                    <span className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-[#003366] text-2xl mr-4 shadow-sm border border-blue-100/50">
+                                        <OffersIcon fontSize="inherit" />
                                     </span>
-                                )}
-                                <div className="flex items-center mb-4 mt-2">
-                                    <span className="text-3xl mr-4">🌐</span>
                                     <div>
-                                        <h3 className="font-bold text-lg text-gray-800 group-hover:text-[#003366] transition-colors line-clamp-1">{offer.company}</h3>
+                                        <h3 className="font-bold text-lg text-gray-800 group-hover:text-[#003366] transition-colors">{offer.offerNumber || offer.company}</h3>
                                         <p className="text-sm text-gray-500">{offer.country}</p>
                                     </div>
                                 </div>
-                                <div className="space-y-3 mb-6">
-                                    <h4 className="font-semibold text-gray-700 min-h-[48px] line-clamp-2">{offer.position}</h4>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="flex items-center text-xs text-gray-600">
-                                            <TimeIcon className="w-4 h-4 mr-2 text-gray-400" /> {offer.duration}
-                                        </div>
-                                        <div className="flex items-center text-xs text-gray-600">
-                                            <StipendIcon className="w-4 h-4 mr-2 text-gray-400" /> {offer.stipend}
-                                        </div>
-                                        <div className="flex items-center text-xs text-gray-600 truncate">
-                                            <FieldIcon className="w-4 h-4 mr-2 text-gray-400" /> {offer.field}
-                                        </div>
-                                        <div className="flex items-center text-xs font-bold text-[#D62828]">
-                                            <CalendarIcon className="w-4 h-4 mr-2 text-[#D62828]/60" /> {offer.deadline}
-                                        </div>
+                                <div className="space-y-3 mb-6 flex-1">
+                                    <h4 className="font-semibold text-gray-700 min-h-[48px] leading-snug line-clamp-2">{offer.position}</h4>
+                                    <div className="flex items-center text-sm text-gray-600">
+                                        <TimeIcon className="w-4 h-4 mr-2 text-gray-400" /> {offer.duration}
+                                    </div>
+                                    <div className="flex items-center text-sm text-gray-600">
+                                        <StipendIcon className="w-4 h-4 mr-2 text-gray-400" /> {offer.stipend}
+                                    </div>
+                                    <div className="flex items-center text-sm text-gray-600">
+                                        <FieldIcon className="w-4 h-4 mr-2 text-gray-400" /> {offer.field}
                                     </div>
                                 </div>
                                 <div className="flex gap-2">
@@ -1050,11 +983,13 @@ export default function MemberDashboard() {
                             </button>
                         </div>
                         <div className="flex flex-col md:flex-row md:items-start">
-                            <span className="text-5xl md:text-6xl mr-6 bg-white/10 p-4 rounded-xl shadow-lg mb-4 md:mb-0">🌐</span>
+                            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-white text-3xl md:text-4xl mr-6 shadow-xl mb-4 md:mb-0 border border-white/20">
+                                <OffersIcon fontSize="inherit" />
+                            </div>
                             <div>
                                 <h2 className="text-2xl md:text-3xl font-bold mb-2">{offer.position}</h2>
                                 <div className="flex flex-col md:flex-row md:items-center md:space-x-4 text-blue-100 space-y-1 md:space-y-0">
-                                    <span className="flex items-center"><CompanyIcon className="w-4 h-4 mr-1" /> {offer.company}</span>
+                                    <span className="flex items-center"><CompanyIcon className="w-4 h-4 mr-1" /> {offer.offerNumber || offer.company}</span>
                                     <span className="flex items-center"><LocationIcon className="w-4 h-4 mr-1" /> {offer.country}</span>
                                 </div>
                             </div>
@@ -1063,7 +998,7 @@ export default function MemberDashboard() {
 
                     {/* Tabs - Scrollable on mobile */}
                     <div className="flex border-b border-gray-200 px-4 md:px-8 bg-white sticky top-0 z-10 overflow-x-auto hide-scrollbar">
-                        {['Overview', 'Description', 'Requirements', 'Benefits'].map((tab) => (
+                        {['Overview', 'Description', 'Requirements'].map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setDetailTab(tab)}
@@ -1114,7 +1049,7 @@ export default function MemberDashboard() {
                                                     <div className="flex items-center text-gray-700">
                                                         <div className="p-2 bg-blue-50 rounded-lg mr-3 text-[#003366]"><TimeIcon /></div>
                                                         <div>
-                                                            <p className="text-xs text-gray-500">Duration</p>
+                                                            <p className="text-xs text-gray-500">Period</p>
                                                             <p className="font-semibold">{offer.duration}</p>
                                                         </div>
                                                     </div>
@@ -1186,18 +1121,6 @@ export default function MemberDashboard() {
                                     </div>
                                 )}
 
-                                {detailTab === 'Benefits' && (
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-                                        {['Accommodation Assitance', 'Health Insurance', 'Transportation Allowance', 'Cultural Events', 'Mentorship Program', 'Certificate of Completion'].map((benefit, i) => (
-                                            <div key={i} className="flex items-center p-4 bg-white rounded-lg border border-gray-100 shadow-sm">
-                                                <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center text-green-600 mr-4">
-                                                    <CheckCircleIcon />
-                                                </div>
-                                                <span className="font-semibold text-gray-800">{benefit}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
                             </motion.div>
                         </AnimatePresence>
                     </div>

@@ -45,9 +45,9 @@ const ADMIN_TABS = ['dashboard', 'offers', 'approve-members', 'applications', 'm
 
 // Mock Data
 const INITIAL_OFFERS = [
-    { id: 1, country: 'Germany', flag: '🇩🇪', company: 'BMW Group', position: 'Software Engineering Intern', duration: '6 Months', stipend: '€1200/mo', field: 'Computer Science', deadline: '2026-03-01', urgent: true, status: 'Active', applicants: 12 },
-    { id: 2, country: 'Switzerland', flag: '🇨🇭', company: 'CERN', position: 'Research Assistant', duration: '12 Months', stipend: 'CHF 3500/mo', field: 'Physics / IT', deadline: '2026-03-15', urgent: false, status: 'Active', applicants: 8 },
-    { id: 3, country: 'Japan', flag: '🇯🇵', company: 'Toyota', position: 'R&D Intern', duration: '3 Months', stipend: '¥150,000/mo', field: 'Mechanical Eng.', deadline: '2026-02-28', urgent: true, status: 'Closed', applicants: 24 },
+    { id: 1, country: 'Germany', company: 'BMW Group', position: 'Software Engineering Intern', duration: '6 Months', stipend: '€1200/mo', field: 'Computer Science', deadline: '2026-03-01', urgent: true, status: 'Active', applicants: 12 },
+    { id: 2, country: 'Switzerland', company: 'CERN', position: 'Research Assistant', duration: '12 Months', stipend: 'CHF 3500/mo', field: 'Physics / IT', deadline: '2026-03-15', urgent: false, status: 'Active', applicants: 8 },
+    { id: 3, country: 'Japan', company: 'Toyota', position: 'R&D Intern', duration: '3 Months', stipend: '¥150,000/mo', field: 'Mechanical Eng.', deadline: '2026-02-28', urgent: true, status: 'Closed', applicants: 24 },
 ];
 
 export default function AdminDashboard() {
@@ -91,10 +91,10 @@ export default function AdminDashboard() {
 
     // New Offer Form State
     const [newOffer, setNewOffer] = useState({
+        offerNumber: '',
         company: '',
         position: '',
         country: '',
-        flag: '',
         duration: '',
         stipend: '',
         field: '',
@@ -215,10 +215,10 @@ export default function AdminDashboard() {
             setShowAddOfferModal(false);
             setEditingOfferId(null);
             setNewOffer({
+                offerNumber: '',
                 company: '',
                 position: '',
                 country: '',
-                flag: '',
                 duration: '',
                 stipend: '',
                 field: '',
@@ -475,7 +475,7 @@ export default function AdminDashboard() {
             const deadline = offer.deadline || '';
             const matchesSearch =
                 !normalizedSearch ||
-                [offer.company, offer.position, offer.country, offer.field]
+                [offer.offerNumber, offer.company, offer.position, offer.country, offer.field]
                     .filter(Boolean)
                     .some((value) => value.toLowerCase().includes(normalizedSearch));
 
@@ -493,7 +493,6 @@ export default function AdminDashboard() {
                 company: '',
                 position: '',
                 country: '',
-                flag: '',
                 duration: '',
                 stipend: '',
                 field: '',
@@ -511,7 +510,6 @@ export default function AdminDashboard() {
                 company: offer.company || '',
                 position: offer.position || '',
                 country: offer.country || '',
-                flag: offer.flag || '',
                 duration: offer.duration || '',
                 stipend: offer.stipend || '',
                 field: offer.field || '',
@@ -558,7 +556,7 @@ export default function AdminDashboard() {
                                     type="text"
                                     value={offerSearch}
                                     onChange={(e) => setOfferSearch(e.target.value)}
-                                    placeholder="Search by company, role, country..."
+                                    placeholder="Search by employer, role, country..."
                                     className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#0B3D59]/20 focus:border-[#0B3D59]"
                                 />
                             </div>
@@ -589,7 +587,7 @@ export default function AdminDashboard() {
                         <table className="w-full text-left min-w-[800px]">
                             <thead className="bg-gray-50 border-b border-gray-200">
                                 <tr>
-                                    <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Company/Role</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Employer/Role</th>
                                     <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Location</th>
                                     <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Applicants</th>
                                     <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Status</th>
@@ -601,12 +599,13 @@ export default function AdminDashboard() {
                                     <tr key={offer._id || offer.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center">
-                                                <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-xl mr-3 shadow-sm border border-blue-100">
-                                                    {offer.flag}
+                                                <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-xl mr-3 shadow-sm border border-blue-100 text-[#003366]">
+                                                    <OffersIcon fontSize="inherit" />
                                                 </div>
                                                 <div>
-                                                    <p className="font-bold text-gray-800">{offer.position}</p>
-                                                    <p className="text-sm text-gray-500">{offer.company}</p>
+                                                    <p className="font-bold text-gray-800">{offer.offerNumber || offer.company}</p>
+                                                    <p className="text-sm text-gray-500">{offer.offerNumber ? offer.company : offer.position}</p>
+                                                    <p className="text-xs text-gray-400">{offer.offerNumber ? offer.position : ''}</p>
                                                 </div>
                                             </div>
                                         </td>
@@ -1307,7 +1306,7 @@ export default function AdminDashboard() {
                                     <thead>
                                         <tr className="border-b border-gray-200">
                                             <th className="py-2 text-xs font-bold text-gray-500 uppercase">Offer</th>
-                                            <th className="py-2 text-xs font-bold text-gray-500 uppercase">Company</th>
+                                            <th className="py-2 text-xs font-bold text-gray-500 uppercase">Employer</th>
                                             <th className="py-2 text-xs font-bold text-gray-500 uppercase">Status</th>
                                             <th className="py-2 text-xs font-bold text-gray-500 uppercase">Rejection Reason</th>
                                             <th className="py-2 text-xs font-bold text-gray-500 uppercase">Update</th>
@@ -1424,7 +1423,6 @@ export default function AdminDashboard() {
                                 company: '',
                                 position: '',
                                 country: '',
-                                flag: '',
                                 duration: '',
                                 stipend: '',
                                 field: '',
@@ -1441,9 +1439,14 @@ export default function AdminDashboard() {
                 </div>
 
                 <form onSubmit={handleAddOffer} className="p-8 space-y-6">
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-gray-700">Offer Number</label>
+                        <input required type="text" className="w-full border border-gray-200 rounded-lg p-3 focus:ring-2 focus:ring-[#0B3D59] outline-none"
+                            value={newOffer.offerNumber} onChange={e => setNewOffer({ ...newOffer, offerNumber: e.target.value })} placeholder="e.g. DE-2024-1234" />
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">Company Name</label>
+                            <label className="text-sm font-bold text-gray-700">Employer Name</label>
                             <input required type="text" className="w-full border border-gray-200 rounded-lg p-3 focus:ring-2 focus:ring-[#0B3D59] outline-none"
                                 value={newOffer.company} onChange={e => setNewOffer({ ...newOffer, company: e.target.value })} placeholder="e.g. Google" />
                         </div>
@@ -1454,16 +1457,11 @@ export default function AdminDashboard() {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-gray-700">Country</label>
                             <input required type="text" className="w-full border border-gray-200 rounded-lg p-3 focus:ring-2 focus:ring-[#0B3D59] outline-none"
                                 value={newOffer.country} onChange={e => setNewOffer({ ...newOffer, country: e.target.value })} placeholder="e.g. Germany" />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">Flag Emoji</label>
-                            <input required type="text" className="w-full border border-gray-200 rounded-lg p-3 focus:ring-2 focus:ring-[#0B3D59] outline-none"
-                                value={newOffer.flag} onChange={e => setNewOffer({ ...newOffer, flag: e.target.value })} placeholder="e.g. 🇩🇪" />
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-gray-700">Deadline</label>
@@ -1479,7 +1477,7 @@ export default function AdminDashboard() {
                                 value={newOffer.stipend} onChange={e => setNewOffer({ ...newOffer, stipend: e.target.value })} placeholder="e.g. €1200/mo" />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">Duration</label>
+                            <label className="text-sm font-bold text-gray-700">Period</label>
                             <input required type="text" className="w-full border border-gray-200 rounded-lg p-3 focus:ring-2 focus:ring-[#0B3D59] outline-none"
                                 value={newOffer.duration} onChange={e => setNewOffer({ ...newOffer, duration: e.target.value })} placeholder="e.g. 6 Months" />
                         </div>
@@ -1505,7 +1503,7 @@ export default function AdminDashboard() {
                             onChange={e => setNewOffer({ ...newOffer, urgent: e.target.checked })}
                             className="w-5 h-5 text-[#0B3D59] rounded"
                         />
-                        <label htmlFor="urgent" className="text-sm font-bold text-gray-700 cursor-pointer">Mark as Urgent Priority</label>
+                        <label htmlFor="urgent" className="text-sm font-bold text-gray-700 cursor-pointer">Deadline Approaching</label>
                     </div>
 
                     <div className="pt-4 border-t border-gray-100 flex justify-end space-x-4">
