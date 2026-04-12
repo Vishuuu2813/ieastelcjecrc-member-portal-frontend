@@ -4,6 +4,9 @@ import Footer from '../components/Footer';
 import logo from '../assets/Iaeste Logo Standard 2.png';
 import verticalLogo from '../assets/logo-removebg-preview 1.png';
 import { apiFetch, setAuthSession } from '../utils/api';
+import Select from 'react-select';
+import * as XLSX from 'xlsx';
+import excelFile from '../assets/JU_Courses_IAESTE_DATA_ITDA.xlsx?url';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -12,8 +15,15 @@ const Register = () => {
         email: '',
         whatsappNumber: '',
         course: '',
-        branchSection: '',
-        semester: '',
+        otherCourse: '',
+        branch: '',
+        otherBranch: '',
+        specialisation: '',
+        superSpecialisation: '',
+        level: '',
+        duration: '',
+        startYear: '',
+        endYear: '',
         hasPassport: '',
         memberType: 'in-station', // default
         universityName: '',
@@ -26,6 +36,16 @@ const Register = () => {
         termsAccepted: false
     });
 
+    const [coursesData, setCoursesData] = useState([]);
+    const [options, setOptions] = useState({
+        courses: [],
+        branches: [],
+        specializations: [],
+        superSpecializations: []
+    });
+
+    const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [isVideoPlaying, setIsVideoPlaying] = useState(false);
@@ -35,7 +55,194 @@ const Register = () => {
 
     useEffect(() => {
         document.title = "Register | IAESTE LC JECRC";
+        
+        const loadExcel = async () => {
+            try {
+                const response = await fetch(excelFile);
+                const arrayBuffer = await response.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer);
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rawData = XLSX.utils.sheet_to_json(sheet);
+                
+                // Normalize Branch names and handle "Core" specialization
+                const data = rawData.map(item => {
+                    let branch = item.Branch;
+                    let spec = item.Specialisation;
+                    
+                    // Normalize CSE variants
+                    if (branch === "Computer Science and Engineering (CSE)" || branch === "Computer Science and Engineering") {
+                        branch = "Computer Science and Engineering";
+                    }
+                    
+                    // If no specialization, set as "Core"
+                    if (!spec || spec.trim() === "") {
+                        spec = "Core";
+                    }
+                    
+                    return { ...item, Branch: branch, Specialisation: spec };
+                });
+
+                setCoursesData(data);
+                
+                // Unique courses for initial dropdown
+                const uniqueCourses = [...new Set(data.map(item => item.Course))].sort();
+                const courseOpts = uniqueCourses.map(c => ({ value: c, label: c }));
+                courseOpts.push({ value: 'Other', label: 'Other' });
+                
+                setOptions(prev => ({
+                    ...prev,
+                    courses: courseOpts
+                }));
+            } catch (err) {
+                console.error("Error loading courses:", err);
+            }
+        };
+        loadExcel();
     }, []);
+
+    const handleSelectChange = (field, selectedOption) => {
+        const value = selectedOption ? selectedOption.value : '';
+        
+        if (field === 'course') {
+            const filtered = coursesData.filter(item => item.Course === value);
+            const branches = [...new Set(filtered.map(item => item.Branch))].sort();
+            const branchOpts = branches.map(b => ({ value: b, label: b }));
+            if (value !== 'Other') branchOpts.push({ value: 'Other', label: 'Other' });
+            
+            setFormData(prev => ({
+                ...prev,
+                course: value,
+                branch: '',
+                otherBranch: '',
+                specialisation: '',
+                superSpecialisation: '',
+                level: '',
+                duration: ''
+            }));
+            
+            setOptions(prev => ({
+                ...prev,
+                branches: branchOpts,
+                specializations: [],
+                superSpecializations: []
+            }));
+        } 
+        else if (field === 'branch') {
+            const filtered = coursesData.filter(item => item.Course === formData.course && item.Branch === value);
+            const specs = [...new Set(filtered.map(item => item.Specialisation))].filter(Boolean).sort();
+            
+            const branchOpts = [...options.branches];
+            
+            setFormData(prev => ({
+                ...prev,
+                branch: value,
+                otherBranch: '',
+                specialisation: '',
+                superSpecialisation: '',
+                level: '',
+                duration: ''
+            }));
+            
+            setOptions(prev => ({
+                ...prev,
+                specializations: specs.map(s => ({ value: s, label: s })),
+                superSpecializations: []
+            }));
+
+            // If only one row and no specs/super-specs, auto-fill
+            if (filtered.length === 1 && !specs.length) {
+                setFormData(prev => ({
+                    ...prev,
+                    branch: value,
+                    level: filtered[0].Level || '',
+                    duration: filtered[0]['Duration (Years)'] || ''
+                }));
+            }
+        }
+        else if (field === 'specialisation') {
+            const filtered = coursesData.filter(item => 
+                item.Course === formData.course && 
+                item.Branch === formData.branch && 
+                item.Specialisation === value
+            );
+            const superSpecs = [...new Set(filtered.map(item => item['Super-Specialisation']))].filter(Boolean).sort();
+            
+            setFormData(prev => ({
+                ...prev,
+                specialisation: value,
+                superSpecialisation: '',
+                level: '',
+                duration: ''
+            }));
+            
+            setOptions(prev => ({
+                ...prev,
+                superSpecializations: superSpecs.map(s => ({ value: s, label: s }))
+            }));
+
+            if (filtered.length === 1 && !superSpecs.length) {
+                setFormData(prev => ({
+                    ...prev,
+                    specialisation: value,
+                    level: filtered[0].Level || '',
+                    duration: filtered[0]['Duration (Years)'] || ''
+                }));
+            }
+        }
+        else if (field === 'superSpecialisation') {
+            const row = coursesData.find(item => 
+                item.Course === formData.course && 
+                item.Branch === formData.branch && 
+                item.Specialisation === formData.specialisation &&
+                item['Super-Specialisation'] === value
+            );
+            
+            setFormData(prev => ({
+                ...prev,
+                superSpecialisation: value,
+                level: row ? row.Level : '',
+                duration: row ? row['Duration (Years)'] : ''
+            }));
+        }
+    };
+
+    const customSelectStyles = {
+        control: (provided, state) => ({
+            ...provided,
+            borderRadius: '0.75rem',
+            padding: '2px',
+            borderColor: state.isFocused ? '#0B3D59' : '#e5e7eb',
+            boxShadow: state.isFocused ? '0 0 0 2px rgba(11, 61, 89, 0.1)' : 'none',
+            '&:hover': { borderColor: '#0B3D59' },
+            transition: 'all 0.2s'
+        }),
+        option: (provided, state) => ({
+            ...provided,
+            backgroundColor: state.isSelected ? '#0B3D59' : state.isFocused ? '#f0f7ff' : 'white',
+            color: state.isSelected ? 'white' : '#1e293b',
+            cursor: 'pointer',
+            padding: '10px 15px',
+            fontWeight: state.isSelected ? '600' : '400',
+            '&:active': { backgroundColor: '#0B3D59' }
+        }),
+        menu: (provided) => ({
+            ...provided,
+            borderRadius: '0.75rem',
+            overflow: 'hidden',
+            backgroundColor: 'white',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+            zIndex: 9999
+        }),
+        menuPortal: (provided) => ({
+            ...provided,
+            zIndex: 9999
+        }),
+        singleValue: (provided) => ({
+            ...provided,
+            color: '#1e293b',
+            fontWeight: '500'
+        })
+    };
 
     const handleInputChange = (e) => {
         const { name, value, type, checked, files } = e.target;
@@ -48,10 +255,14 @@ const Register = () => {
         }
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
         setApiError('');
-        // Directly register and redirect to login (payment popup disabled for now)
+        setShowConfirmationModal(true);
+    };
+
+    const confirmSubmit = async () => {
+        setShowConfirmationModal(false);
         await handlePaymentSuccess();
     };
 
@@ -64,9 +275,13 @@ const Register = () => {
                 registrationNumber: formData.registrationNumber,
                 email: formData.email,
                 whatsappNumber: formData.whatsappNumber,
-                course: formData.course,
-                branchSection: formData.branchSection,
-                semester: formData.semester,
+                course: formData.course === 'Other' ? formData.otherCourse : formData.course,
+                branch: formData.branch === 'Other' ? formData.otherBranch : formData.branch,
+                specialisation: formData.specialisation,
+                superSpecialisation: formData.superSpecialisation,
+                level: formData.level,
+                duration: formData.duration,
+                tenure: `${formData.startYear}–${formData.endYear}`,
                 hasPassport: formData.hasPassport,
                 memberType: formData.memberType,
                 universityName: formData.universityName,
@@ -83,8 +298,7 @@ const Register = () => {
             });
 
             setShowPaymentModal(false);
-            // Payment gateway not integrated yet: after register, send user back to login
-            navigate('/login');
+            setShowSuccessModal(true);
         } catch (error) {
             setApiError(error?.message || 'Registration failed');
         } finally {
@@ -146,7 +360,7 @@ const Register = () => {
                     </svg>
                 </div>
 
-                <h3 className="text-2xl font-bold text-[#0B3D59] mb-4">Registration Successful!</h3>
+                <h3 className="text-2xl font-bold text-[#0B3D59] mb-4">Registration Confirmed</h3>
 
                 <div className="space-y-4 text-gray-600 mb-8 text-left bg-gray-50 p-6 rounded-xl border border-gray-100">
                     <div className="flex items-start">
@@ -175,6 +389,36 @@ const Register = () => {
                 >
                     Back to Login
                 </Link>
+            </div>
+        </div>
+    );
+    const ConfirmationModal = () => (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white rounded-2xl w-full max-w-md p-8 shadow-2xl transform transition-all scale-100">
+                <div className="text-center mb-6">
+                    <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 text-[#0B3D59]">
+                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 className="text-2xl font-bold text-[#0B3D59]">Check Details</h3>
+                    <p className="text-gray-500 mt-2 text-lg">Have you checked your details?</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <button
+                        onClick={() => setShowConfirmationModal(false)}
+                        className="w-full py-3 px-4 border border-gray-200 text-gray-600 font-bold rounded-xl hover:bg-gray-50 transition-all"
+                    >
+                        Review
+                    </button>
+                    <button
+                        onClick={confirmSubmit}
+                        className="w-full bg-[#0B3D59] hover:bg-[#072a3f] text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-[#0B3D59]/20 transition-all"
+                    >
+                        Confirm
+                    </button>
+                </div>
             </div>
         </div>
     );
@@ -268,7 +512,7 @@ const Register = () => {
                                 </div>
                                 <div className="group">
                                     <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 group-focus-within:text-[#0B3D59] transition-colors">WhatsApp Number</label>
-                                    <input required type="tel" name="whatsappNumber" value={formData.whatsappNumber} onChange={handleInputChange} className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0B3D59]/20 focus:border-[#0B3D59] transition-all" placeholder="+91 XXXXX XXXXX" />
+                                    <input required type="tel" name="whatsappNumber" value={formData.whatsappNumber} onChange={handleInputChange} className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0B3D59]/20 focus:border-[#0B3D59] transition-all" placeholder="XXXXX XXXXX" />
                                 </div>
                             </div>
 
@@ -276,22 +520,167 @@ const Register = () => {
                                 {/* Password will be provided by admin after approval */}
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="group">
-                                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 group-focus-within:text-[#0B3D59] transition-colors">Course</label>
-                                    <input required type="text" name="course" value={formData.course} onChange={handleInputChange} className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0B3D59]/20 focus:border-[#0B3D59] transition-all" placeholder="B.Tech" />
+                            {/* Hierarchical Dependent Dropdowns */}
+                            <div className="space-y-5 bg-slate-50/50 p-6 rounded-2xl border border-slate-100 mb-2">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="group">
+                                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 group-focus-within:text-[#0B3D59] transition-colors">Course</label>
+                                        <Select
+                                            options={options.courses}
+                                            styles={customSelectStyles}
+                                            onChange={(opt) => handleSelectChange('course', opt)}
+                                            placeholder="Select Course"
+                                            className="react-select-container"
+                                            classNamePrefix="react-select"
+                                            isSearchable
+                                            required
+                                            menuPortalTarget={document.body}
+                                            menuPosition="fixed"
+                                        />
+                                    </div>
+
+                                    {formData.course !== 'Other' && options.branches.length > 0 && (
+                                        <div className="group animate-fade-in">
+                                            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 group-focus-within:text-[#0B3D59] transition-colors">Branch</label>
+                                            <Select
+                                                options={options.branches}
+                                                styles={customSelectStyles}
+                                                onChange={(opt) => handleSelectChange('branch', opt)}
+                                                placeholder="Select Branch"
+                                                className="react-select-container"
+                                                classNamePrefix="react-select"
+                                                value={options.branches.find(o => o.value === formData.branch) || null}
+                                                isSearchable
+                                                required
+                                                menuPortalTarget={document.body}
+                                                menuPosition="fixed"
+                                            />
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="group">
-                                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 group-focus-within:text-[#0B3D59] transition-colors">Branch/Section</label>
-                                    <input required type="text" name="branchSection" value={formData.branchSection} onChange={handleInputChange} className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0B3D59]/20 focus:border-[#0B3D59] transition-all" placeholder="CSE-A" />
+
+                                {formData.course === 'Other' && (
+                                    <div className="group animate-fade-in">
+                                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 group-focus-within:text-[#0B3D59] transition-colors">Specify Other Course</label>
+                                        <input required type="text" name="otherCourse" value={formData.otherCourse} onChange={handleInputChange} className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0B3D59]/20 focus:border-[#0B3D59] transition-all" placeholder="Enter course name" />
+                                    </div>
+                                )}
+
+                                {formData.branch === 'Other' && (
+                                    <div className="group animate-fade-in">
+                                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 group-focus-within:text-[#0B3D59] transition-colors">Specify Other Branch</label>
+                                        <input required type="text" name="otherBranch" value={formData.otherBranch} onChange={handleInputChange} className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0B3D59]/20 focus:border-[#0B3D59] transition-all" placeholder="Enter branch name" />
+                                    </div>
+                                )}
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {options.specializations.length > 0 && (
+                                        <div className="group animate-fade-in">
+                                            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 group-focus-within:text-[#0B3D59] transition-colors">Specialisation (Optional)</label>
+                                            <Select
+                                                options={options.specializations}
+                                                styles={customSelectStyles}
+                                                onChange={(opt) => handleSelectChange('specialisation', opt)}
+                                                placeholder="Select Specialisation"
+                                                className="react-select-container"
+                                                classNamePrefix="react-select"
+                                                value={options.specializations.find(o => o.value === formData.specialisation) || null}
+                                                isSearchable
+                                                menuPortalTarget={document.body}
+                                                menuPosition="fixed"
+                                                isClearable
+                                            />
+                                        </div>
+                                    )}
+
+                                    {options.superSpecializations.length > 0 && (
+                                        <div className="group animate-fade-in">
+                                            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 group-focus-within:text-[#0B3D59] transition-colors">Super-Specialisation (Optional)</label>
+                                            <Select
+                                                options={options.superSpecializations}
+                                                styles={customSelectStyles}
+                                                onChange={(opt) => handleSelectChange('superSpecialisation', opt)}
+                                                placeholder="Select Super-Specialisation"
+                                                className="react-select-container"
+                                                classNamePrefix="react-select"
+                                                value={options.superSpecializations.find(o => o.value === formData.superSpecialisation) || null}
+                                                isSearchable
+                                                menuPortalTarget={document.body}
+                                                menuPosition="fixed"
+                                                isClearable
+                                            />
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="group">
-                                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 group-focus-within:text-[#0B3D59] transition-colors">Semester</label>
-                                    <select name="semester" value={formData.semester} onChange={handleInputChange} className="w-full px-4 py-2.5 rounded-lg border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#0B3D59]/20 focus:border-[#0B3D59] transition-all bg-white">
-                                        <option value="">Select</option>
-                                        {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => <option key={sem} value={sem}>{sem}</option>)}
-                                    </select>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="group">
+                                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 group-focus-within:text-[#0B3D59] transition-colors">Start Year</label>
+                                        <Select
+                                            options={Array.from({ length: 12 }, (_, i) => ({ value: (new Date().getFullYear() - 5 + i).toString(), label: (new Date().getFullYear() - 5 + i).toString() }))}
+                                            styles={customSelectStyles}
+                                            onChange={(opt) => setFormData({ ...formData, startYear: opt ? opt.value : '' })}
+                                            placeholder="Start"
+                                            className="react-select-container"
+                                            menuPortalTarget={document.body}
+                                            menuPosition="fixed"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="group">
+                                        <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5 group-focus-within:text-[#0B3D59] transition-colors">End Year</label>
+                                        <Select
+                                            options={Array.from({ length: 12 }, (_, i) => ({ value: (new Date().getFullYear() - 5 + i).toString(), label: (new Date().getFullYear() - 5 + i).toString() }))}
+                                            styles={customSelectStyles}
+                                            onChange={(opt) => setFormData({ ...formData, endYear: opt ? opt.value : '' })}
+                                            placeholder="End"
+                                            className="react-select-container"
+                                            menuPortalTarget={document.body}
+                                            menuPosition="fixed"
+                                            required
+                                        />
+                                    </div>
                                 </div>
+
+                                {formData.course && formData.course !== 'Other' && (
+                                    <div className="grid grid-cols-2 gap-4 animate-fade-in">
+                                        <div className="group">
+                                            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{formData.course === 'Other' || formData.branch === 'Other' ? 'Level' : 'Level (Auto)'}</label>
+                                            <input 
+                                                readOnly={!(formData.course === 'Other' || formData.branch === 'Other')} 
+                                                type="text" 
+                                                name="level"
+                                                value={formData.level} 
+                                                onChange={handleInputChange}
+                                                className={`w-full px-4 py-2.5 rounded-lg border transition-all ${formData.course === 'Other' || formData.branch === 'Other' ? 'border-gray-200 bg-white focus:ring-2 focus:ring-[#0B3D59]/20 focus:border-[#0B3D59]' : 'border-gray-100 bg-gray-50 text-gray-500 cursor-not-allowed'} text-sm font-medium`} 
+                                                placeholder={formData.course === 'Other' || formData.branch === 'Other' ? "e.g. UG" : "Auto-filled"} 
+                                            />
+                                        </div>
+                                        <div className="group">
+                                            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1.5">{formData.course === 'Other' || formData.branch === 'Other' ? 'Duration' : 'Expected Duration'}</label>
+                                            <input 
+                                                readOnly={!(formData.course === 'Other' || formData.branch === 'Other')} 
+                                                type="text" 
+                                                name="duration"
+                                                value={formData.duration} 
+                                                onChange={handleInputChange}
+                                                className={`w-full px-4 py-2.5 rounded-lg border transition-all ${formData.course === 'Other' || formData.branch === 'Other' ? 'border-gray-200 bg-white focus:ring-2 focus:ring-[#0B3D59]/20 focus:border-[#0B3D59]' : 'border-gray-100 bg-gray-50 text-gray-500 cursor-not-allowed'} text-sm font-medium`} 
+                                                placeholder={formData.course === 'Other' || formData.branch === 'Other' ? "e.g. 4" : "Auto-filled"} 
+                                            />
+                                            {(formData.course === 'Other' || formData.branch === 'Other') && formData.duration && !isNaN(formData.duration) && <span className="text-[10px] text-gray-400 mt-1 block">Years</span>}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Tag-style Selection Preview */}
+                                {formData.course && formData.course !== 'Other' && (
+                                    <div className="flex flex-wrap gap-2 pt-2 animate-fade-in">
+                                        {formData.course && <span className="px-3 py-1 bg-blue-100 text-[#0B3D59] rounded-full text-[10px] font-bold uppercase tracking-tight">{formData.course}</span>}
+                                        {formData.branch && <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-bold uppercase tracking-tight">{formData.branch}</span>}
+                                        {formData.specialisation && <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-bold uppercase tracking-tight">{formData.specialisation}</span>}
+                                        {formData.superSpecialisation && <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-bold uppercase tracking-tight">{formData.superSpecialisation}</span>}
+                                    </div>
+                                )}
                             </div>
 
                             {/* Passport Question */}
@@ -440,6 +829,7 @@ const Register = () => {
                 </div>
 
                 {/* Modals */}
+                {showConfirmationModal && <ConfirmationModal />}
                 {showPaymentModal && <PaymentModal />}
                 {showSuccessModal && <SuccessModal />}
             </main>

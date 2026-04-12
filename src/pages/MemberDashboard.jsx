@@ -26,7 +26,10 @@ import {
     ChevronLeft as ChevronLeftIcon,
     ChevronRight as ChevronRightIcon,
     Menu as MenuIcon,
-    KeyboardArrowDown as ArrowDownIcon
+    KeyboardArrowDown as ArrowDownIcon,
+    PictureAsPdf as PdfIcon,
+    Info as InfoIcon,
+    Article as ArticleIcon
 } from '@mui/icons-material';
 import {
     Chart as ChartJS,
@@ -1187,6 +1190,174 @@ export default function MemberDashboard() {
         );
     };
 
+    const DocumentsView = () => {
+        const handleDownloadPDF = (filename) => {
+            const link = document.createElement('a');
+            const encodedFilename = encodeURIComponent(filename);
+            link.href = `/documents/${encodedFilename}`;
+            link.download = filename;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        const handleViewPDF = (filename) => {
+            const encodedFilename = encodeURIComponent(filename);
+            window.open(`/documents/${encodedFilename}`, '_blank');
+        };
+
+        return (
+            <div className="space-y-8 animate-fade-in-up">
+                <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
+                    <h3 className="text-2xl font-bold text-gray-800 mb-2">Document Guidelines</h3>
+                    <p className="text-gray-600 mb-6">Follow these steps to prepare your application documents for IAESTE offers.</p>
+                </div>
+
+                {/* Step 1: Factsheet Creation */}
+                <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
+                    <div className="flex items-start gap-4 mb-6">
+                        <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-[#003366] to-[#004080] rounded-full flex items-center justify-center text-white font-bold text-xl">
+                            1
+                        </div>
+                        <div className="flex-1">
+                            <h4 className="text-xl font-bold text-gray-800 mb-2 flex items-center gap-2">
+                                <ArticleIcon className="text-[#003366]" />
+                                Factsheet Creation
+                            </h4>
+                            <div className="space-y-4 text-gray-700">
+                                <p className="leading-relaxed">
+                                    A <strong className="text-[#003366]">Factsheet</strong> is a comprehensive document that showcases your academic achievements, skills, work experience, and co-scholastic activities. It serves as your professional profile and is the <strong className="text-[#D62828]">most important part</strong> of applying to any IAESTE offer.
+                                </p>
+                                <div className="bg-blue-50 border-l-4 border-[#003366] p-4 rounded-r-lg">
+                                    <div className="flex items-start gap-3">
+                                        <InfoIcon className="text-[#003366] flex-shrink-0 mt-0.5" />
+                                        <div>
+                                            <p className="font-semibold text-[#003366] mb-1">Why is Factsheet Important?</p>
+                                            <p className="text-sm text-gray-700">
+                                                Your factsheet is the first thing employers see when reviewing your application. It helps them understand your qualifications, skills, and suitability for the position. A well-prepared factsheet significantly increases your chances of being selected for an offer.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p className="leading-relaxed">
+                                    The factsheet includes sections for:
+                                </p>
+                                <ul className="list-disc list-inside space-y-2 ml-4 text-gray-700">
+                                    <li>Academic records (Class X, XII, Graduation, Post-Graduation)</li>
+                                    <li>Current field of study and semester information</li>
+                                    <li>Offer-related skills (Programming languages, courses, MOOCs)</li>
+                                    <li>Work experience (Paper presentations, projects, internships)</li>
+                                    <li>Co-scholastic activities and achievements</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mt-6 pt-6 border-t border-gray-100">
+                        <p className="text-sm font-semibold text-gray-700 mb-3">Sample Document:</p>
+                        <div className="flex flex-wrap gap-3">
+                            <button
+                                onClick={() => handleViewPDF('Factsheet Format.pdf')}
+                                className="flex items-center gap-2 px-4 py-2 bg-[#003366] text-white rounded-lg hover:bg-[#004080] transition-colors font-medium"
+                            >
+                                <PdfIcon />
+                                View Sample Factsheet
+                            </button>
+                            <button
+                                onClick={() => handleDownloadPDF('Factsheet Format.pdf')}
+                                className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-[#003366] text-[#003366] rounded-lg hover:bg-blue-50 transition-colors font-medium"
+                            >
+                                <DownloadIcon />
+                                Download Sample
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Step 2: Nomination Packet */}
+                <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
+                    <div className="flex items-start gap-4 mb-6">
+                        <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-r from-[#D62828] to-[#E63946] rounded-full flex items-center justify-center text-white font-bold text-xl">
+                            2
+                        </div>
+                        <div className="flex-1">
+                            <h4 className="text-xl font-bold text-gray-800 mb-2 flex items-center gap-2">
+                                <ArticleIcon className="text-[#D62828]" />
+                                Nomination Packet
+                            </h4>
+                            <div className="space-y-4 text-gray-700">
+                                <p className="leading-relaxed">
+                                    Once your <strong className="text-[#003366]">Factsheet is selected</strong> for an offer, you need to create a <strong className="text-[#D62828]">Nomination Packet</strong>. This packet contains all the necessary documents required by the host country and employer to process your internship application.
+                                </p>
+                                <div className="bg-red-50 border-l-4 border-[#D62828] p-4 rounded-r-lg">
+                                    <div className="flex items-start gap-3">
+                                        <InfoIcon className="text-[#D62828] flex-shrink-0 mt-0.5" />
+                                        <div>
+                                            <p className="font-semibold text-[#D62828] mb-1">What's Included?</p>
+                                            <p className="text-sm text-gray-700">
+                                                The nomination packet typically includes offer forms, CV, cover letter, transcripts, language certificates, passport copies, recommendation letters, and other country-specific requirements. Each country may have slightly different document requirements.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p className="leading-relaxed">
+                                    Common documents in a nomination packet include:
+                                </p>
+                                <ul className="list-disc list-inside space-y-2 ml-4 text-gray-700">
+                                    <li>Offer form and SNF (Student Nomination Form)</li>
+                                    <li>Cover letter and CV</li>
+                                    <li>Academic transcripts and list of subjects</li>
+                                    <li>Language certificates</li>
+                                    <li>Bonafide certificate and Certificate of Enrollment</li>
+                                    <li>Letters of recommendation</li>
+                                    <li>Relevant certificates (up to 5)</li>
+                                    <li>Passport copies (first and last page)</li>
+                                    <li>Passport size photo</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mt-6 pt-6 border-t border-gray-100">
+                        <p className="text-sm font-semibold text-gray-700 mb-3">Sample Document:</p>
+                        <div className="flex flex-wrap gap-3">
+                            <button
+                                onClick={() => handleViewPDF('Documents required.pdf')}
+                                className="flex items-center gap-2 px-4 py-2 bg-[#D62828] text-white rounded-lg hover:bg-[#E63946] transition-colors font-medium"
+                            >
+                                <PdfIcon />
+                                View Sample Nomination Packet
+                            </button>
+                            <button
+                                onClick={() => handleDownloadPDF('Documents required.pdf')}
+                                className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-[#D62828] text-[#D62828] rounded-lg hover:bg-red-50 transition-colors font-medium"
+                            >
+                                <DownloadIcon />
+                                Download Sample
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Additional Info */}
+                <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6">
+                    <div className="flex items-start gap-3">
+                        <InfoIcon className="text-yellow-700 flex-shrink-0 mt-0.5" />
+                        <div>
+                            <p className="font-semibold text-yellow-800 mb-2">Important Notes:</p>
+                            <ul className="text-sm text-yellow-900 space-y-1 list-disc list-inside ml-2">
+                                <li>Ensure all documents are properly formatted and clearly readable</li>
+                                <li>Follow the exact format shown in the sample documents</li>
+                                <li>Submit documents well before the deadline</li>
+                                <li>Some countries may require hard copies for visa applications</li>
+                                <li>Contact your Local Committee if you have any questions</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     // --- Main Render ---
 
     // Calculate main margin based on sidebar state
@@ -1298,7 +1469,8 @@ export default function MemberDashboard() {
                             {activeTab === 'profile' && <ProfileView />}
                             {activeTab === 'settings' && <SettingsView />}
                             {activeTab === 'notifications' && <NotificationsListView />}
-                            {activeTab !== 'dashboard' && activeTab !== 'offers' && activeTab !== 'applications' && activeTab !== 'saved' && activeTab !== 'profile' && activeTab !== 'settings' && activeTab !== 'notifications' && (
+                            {activeTab === 'documents' && <DocumentsView />}
+                            {activeTab !== 'dashboard' && activeTab !== 'offers' && activeTab !== 'applications' && activeTab !== 'profile' && activeTab !== 'settings' && activeTab !== 'notifications' && activeTab !== 'documents' && (
                                 <div className="flex items-center justify-center h-96 text-gray-400">
                                     <div className="text-center">
                                         <NominationIcon style={{ fontSize: 64, opacity: 0.5 }} />

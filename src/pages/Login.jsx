@@ -182,14 +182,14 @@ const Login = () => {
                                     </div>
                                 )}
 
-                                {/* Demo Credentials Helper (Temporary) */}
+                                {/* Demo Credentials Helper (Temporary)
                                 <div className="p-3 bg-blue-50/50 rounded-lg border border-blue-100 text-xs text-gray-600">
                                     <p className="font-semibold mb-2 text-[#0B3D59]">Demo Credentials (Click to fill):</p>
                                     <div className="flex space-x-2">
                                         <button type="button" onClick={() => fillCredentials('member')} className="px-3 py-1 bg-white border border-blue-200 rounded hover:bg-blue-50 transition-colors">Member</button>
                                         <button type="button" onClick={() => fillCredentials('admin')} className="px-3 py-1 bg-white border border-blue-200 rounded hover:bg-blue-50 transition-colors">Admin</button>
                                     </div>
-                                </div>
+                                </div> */}
 
                                 <div className="flex items-center justify-between text-sm mt-6">
                                     <a href="#" className="text-gray-500 hover:text-[#0B3D59] transition-colors font-medium">Forgot Password?</a>
