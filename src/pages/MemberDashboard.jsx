@@ -27,13 +27,10 @@ import {
     ChevronRight as ChevronRightIcon,
     Menu as MenuIcon,
     KeyboardArrowDown as ArrowDownIcon,
-<<<<<<< Updated upstream
     PictureAsPdf as PdfIcon,
     Info as InfoIcon,
-    Article as ArticleIcon
-=======
+    Article as ArticleIcon,
     CalendarMonth as CalendarIcon
->>>>>>> Stashed changes
 } from '@mui/icons-material';
 import {
     Chart as ChartJS,

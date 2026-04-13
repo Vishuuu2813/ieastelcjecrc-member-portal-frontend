@@ -19,25 +19,41 @@ const Login = () => {
         document.title = "Login | IAESTE LC JECRC";
     }, []);
 
-    const handleLogin = async (e) => {
-        e.preventDefault();
-        setError('');
-        setLoading(true);
-        try {
-            const data = await apiFetch('/api/auth/login', {
-                method: 'POST',
-                auth: false,
-                body: { email, password }
-            });
+    // Replace your existing handleLogin with this updated version inside Login.jsx
+
+const handleLogin = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    
+    try {
+        const data = await apiFetch('/api/auth/login', {
+            method: 'POST',
+            auth: false,
+            body: { email, password }
+        });
+
+        if (data && data.token) {
+            // 1. Set the session in localStorage
             setAuthSession({ token: data.token, user: data.user });
-            if (data?.user?.role === 'admin') navigate('/admin-dashboard');
-            else navigate('/dashboard');
-        } catch (err) {
-            setError(err?.message || 'Login failed');
-        } finally {
-            setLoading(false);
+
+            // 2. Immediate navigation based on role
+            // We use { replace: true } to prevent the user from clicking "Back" into the login page
+            if (data?.user?.role === 'admin') {
+                navigate('/admin-dashboard', { replace: true });
+            } else {
+                navigate('/dashboard', { replace: true });
+            }
+        } else {
+            throw new Error("Invalid response from server");
         }
-    };
+    } catch (err) {
+        console.error("Login Error:", err);
+        setError(err?.message || 'Login failed. Please check your credentials.');
+    } finally {
+        setLoading(false);
+    }
+};
 
     const fillCredentials = (type) => {
         if (type === 'admin') {
